@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hipotononano - Starry Night</title>
+    <link href="/assets/styles.css" rel="stylesheet">
+    <style>
+        body {
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #center-text {
+            color: #fff;
+            border-color: #fff;
+        }
+
+        #stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Keyframes for twinkling effect */
+        @keyframes twinkle {
+            0% { opacity: 1; }
+            50% { opacity: 0.1; }
+            100% { opacity: 1; }
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+        }
+
+        .twinkle {
+            animation: twinkle 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="center-text">Hipotononano</div>
+    
+    <div id="stars"></div>
+
+    <script>
+        // Configuration for stars with updated sizes and counts
+        const starConfig = [
+            { size: 1, count: getRandomInt(1000, 2000), shouldTwinkle: true },
+            { size: 3, count: getRandomInt(75, 100), shouldTwinkle: true },
+            { size: 5, count: getRandomInt(10, 25), shouldTwinkle: false }
+        ];
+
+        const starsContainer = document.getElementById('stars');
+
+        // Function to generate random integer between min and max
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Function to create stars
+        function createStars() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            starConfig.forEach(config => {
+                for (let i = 0; i < config.count; i++) {
+                    const star = document.createElement('div');
+                    star.classList.add('star');
+                    star.style.width = `${config.size}px`;
+                    star.style.height = `${config.size}px`;
+                    star.style.left = `${getRandomInt(0, viewportWidth)}px`;
+                    star.style.top = `${getRandomInt(0, viewportHeight)}px`;
+                    star.style.backgroundColor = Math.random() < 0.5 ? '#FFFFFF' : getRandomLightBlue();
+                    
+                    // Randomly decide if the star should twinkle (70% chance)
+                    if (config.shouldTwinkle && Math.random() < 0.7) {
+                        star.classList.add('twinkle');
+                        star.style.animationDuration = `2s`;
+                        star.style.animationDelay = `${Math.random() * 5}s`;
+                    }
+
+                    starsContainer.appendChild(star);
+                }
+            });
+        }
+
+        // Function to get a random light blue color
+        function getRandomLightBlue() {
+            const blueShades = ['#ADD8E6', '#B0E0E6', '#87CEFA', '#87CEEB', '#00BFFF'];
+            return blueShades[Math.floor(Math.random() * blueShades.length)];
+        }
+
+        // Initialize stars
+        createStars();
+
+        // Handle window resize for responsiveness
+        window.addEventListener('resize', () => {
+            // Clear existing stars
+            starsContainer.innerHTML = '';
+            // Recreate stars
+            createStars();
+        });
+    </script>
+</body>
+</html>

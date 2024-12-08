@@ -1,278 +1,43 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hipotononano - Conway's Game of Life</title>
+    <title>Hipotononano</title>
     <style>
-        /* Reset default margins and paddings */
-        * {
+        body, html {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
-
-        /* Make the canvas fill the entire viewport */
-        canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-            background-color: #f0f0f0; /* Light background for visibility */
-        }
-
-        /* Style for the central text container */
-        #center-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px 40px;
-            border: 2px solid #000;
-            background-color: rgba(255, 255, 255, 0.8);
-            font-family: Arial, sans-serif;
-            font-size: 2em;
-            text-align: center;
-            z-index: 2; /* Ensure the text is above the canvas */
-            cursor: pointer; /* Change cursor to pointer to indicate interactivity */
-            user-select: none; /* Prevent text selection on double-click */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <!-- Canvas for the Game of Life -->
-    <canvas id="gameCanvas"></canvas>
-
-    <!-- Central Text -->
-    <div id="center-text">Hipotononano</div>
+    <iframe id="visualizationIframe" src=""></iframe>
 
     <script>
-        // Get the canvas and context
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const pages = [
+            '/visualizations/starfield.html',
+            '/visualizations/starry-night.html',
+            '/visualizations/game-of-life.html',
+            '/visualizations/matrix.html',
+            '/visualizations/fireworks.html'
+        ];
 
-        // Grid parameters
-        let grid;
-        let rows;
-        let cols;
-        const resolution = 6; // Size of each cell in pixels
-
-        // Control flags for drawing
-        let isDrawing = false;
-
-        /**
-         * Function to generate a random RGB color string.
-         * @returns {string} A random RGB color, e.g., "rgb(123,45,67)"
-         */
-        function getRandomColor() {
-            const r = Math.floor(Math.random() * 256);
-            const g = Math.floor(Math.random() * 256);
-            const b = Math.floor(Math.random() * 256);
-            return `rgb(${r},${g},${b})`;
+        function getRandomPage() {
+            const randomIndex = Math.floor(Math.random() * pages.length);
+            return pages[randomIndex];
         }
 
-        /**
-         * Function to resize the canvas to match the window size.
-         * Initializes the grid after resizing.
-         */
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initializeGrid();
-        }
-
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        /**
-         * Function to initialize the grid with random states and colors.
-         */
-        function initializeGrid() {
-            cols = Math.floor(canvas.width / resolution);
-            rows = Math.floor(canvas.height / resolution);
-            grid = createArray(cols, rows);
-
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    const isAlive = Math.random() < 0.5;
-                    grid[i][j].state = isAlive ? 1 : 0;
-                    grid[i][j].color = isAlive ? getRandomColor() : null;
-                }
-            }
-        }
-
-        /**
-         * Function to create a 2D array representing the grid.
-         * Each cell is an object with 'state' and 'color' properties.
-         * @param {number} cols - Number of columns.
-         * @param {number} rows - Number of rows.
-         * @returns {Array} 2D array of cell objects.
-         */
-        function createArray(cols, rows) {
-            let arr = new Array(cols);
-            for (let i = 0; i < cols; i++) {
-                arr[i] = new Array(rows);
-                for (let j = 0; j < rows; j++) {
-                    arr[i][j] = { state: 0, color: null };
-                }
-            }
-            return arr;
-        }
-
-        /**
-         * Function to draw the grid on the canvas.
-         * Active cells are drawn with their assigned colors.
-         */
-        function drawGrid() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#000';
-
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    if (grid[i][j].state === 1 && grid[i][j].color) {
-                        ctx.fillStyle = grid[i][j].color;
-                        ctx.fillRect(i * resolution, j * resolution, resolution, resolution);
-                    }
-                }
-            }
-
-            // Draw border around the canvas
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(0, 0, canvas.width, canvas.height);
-        }
-
-        /**
-         * Function to compute the next generation based on Conway's rules.
-         * Assigns a random color to cells that become alive.
-         */
-        function nextGeneration() {
-            const next = createArray(cols, rows);
-
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    let neighbors = 0;
-                    // Loop through neighbors
-                    for (let x = -1; x <= 1; x++) {
-                        for (let y = -1; y <= 1; y++) {
-                            if (x === 0 && y === 0) continue;
-                            const ni = (i + x + cols) % cols;
-                            const nj = (j + y + rows) % rows;
-                            neighbors += grid[ni][nj].state;
-                        }
-                    }
-
-                    // Apply Conway's rules
-                    if (grid[i][j].state === 1) {
-                        if (neighbors < 2 || neighbors > 3) {
-                            next[i][j].state = 0;
-                            next[i][j].color = null;
-                        } else {
-                            next[i][j].state = 1;
-                            next[i][j].color = grid[i][j].color; // Retain color
-                        }
-                    } else {
-                        if (neighbors === 3) {
-                            next[i][j].state = 1;
-                            next[i][j].color = getRandomColor(); // Assign new random color
-                        }
-                    }
-                }
-            }
-
-            grid = next;
-        }
-
-        /**
-         * Function to activate a cell based on pixel coordinates.
-         * Assigns a random color to the cell upon activation.
-         * @param {number} x - X-coordinate of the mouse or touch event.
-         * @param {number} y - Y-coordinate of the mouse or touch event.
-         */
-        function activateCell(x, y) {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = x - rect.left;
-            const mouseY = y - rect.top;
-            const i = Math.floor(mouseX / resolution);
-            const j = Math.floor(mouseY / resolution);
-            if (i >= 0 && i < cols && j >= 0 && j < rows) {
-                grid[i][j].state = 1;
-                grid[i][j].color = getRandomColor();
-            }
-        }
-
-        /**
-         * Event listeners for mouse interactions.
-         */
-        canvas.addEventListener('mousedown', (e) => {
-            isDrawing = true;
-            activateCell(e.clientX, e.clientY);
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (isDrawing) {
-                activateCell(e.clientX, e.clientY);
-            }
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            isDrawing = false;
-        });
-
-        canvas.addEventListener('mouseleave', () => {
-            isDrawing = false;
-        });
-
-        /**
-         * Event listeners for touch interactions (mobile devices).
-         */
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent scrolling
-            isDrawing = true;
-            const touch = e.touches[0];
-            activateCell(touch.clientX, touch.clientY);
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Prevent scrolling
-            if (isDrawing) {
-                const touch = e.touches[0];
-                activateCell(touch.clientX, touch.clientY);
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('touchend', () => {
-            isDrawing = false;
-        });
-
-        canvas.addEventListener('touchcancel', () => {
-            isDrawing = false;
-        });
-
-        /**
-         * Animation loop with controlled frame rate.
-         */
-        let lastTime = 0;
-        const fps = 10; // Frames per second
-        const interval = 1000 / fps;
-
-        function animate(time) {
-            requestAnimationFrame(animate);
-            if (time - lastTime >= interval) {
-                drawGrid();
-                nextGeneration();
-                lastTime = time;
-            }
-        }
-
-        // Start the animation
-        requestAnimationFrame(animate);
-
-        /**
-         * Add click event listener to the central text to restart the game.
-         */
-        document.getElementById('center-text').addEventListener('click', () => {
-            initializeGrid();
-        });
+        const iframe = document.getElementById('visualizationIframe');
+        iframe.src = getRandomPage();
     </script>
 </body>
 </html>

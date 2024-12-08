@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hipotononano - Matrix</title>
+    <link href="/assets/styles.css" rel="stylesheet">
+    <style>
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+        }
+
+        #center-text {
+            color: #00FF00;
+            border-color: #00FF00;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Responsive font size for central text */
+        @media (max-width: 600px) {
+            .center-text {
+                font-size: 1.5em;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="center-text">Hipotononano</div>
+
+    <canvas id="matrixCanvas"></canvas>
+
+    <script>
+        // Get the canvas element and its 2D context
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas to full screen
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        // Characters to be used in the Matrix effect
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%';
+        const fontSize = 16; // Fixed font size for all columns
+        const baseFontSize = fontSize; // Base font size for column calculations
+        let columns = Math.floor(width / baseFontSize); // Number of columns for the rain
+
+        // Array of drops - one per column
+        let drops = [];
+
+        // Array to store speed for each column (frames to wait before updating)
+        let speeds = [];
+
+        // Array to store frame counters for each column
+        let frameCounters = [];
+
+        /**
+         * Generates an array of speeds ensuring no two adjacent columns have the same speed.
+         * @param {number} numColumns - The number of columns.
+         * @param {number} minSpeed - The minimum speed value.
+         * @param {number} maxSpeed - The maximum speed value.
+         * @returns {number[]} - Array of speeds for each column.
+         */
+        function generateSpeeds(numColumns, minSpeed, maxSpeed) {
+            const speedsArray = [];
+            let previousSpeed = null;
+
+            for (let i = 0; i < numColumns; i++) {
+                let availableSpeeds = [];
+                for (let speed = minSpeed; speed <= maxSpeed; speed++) {
+                    if (speed !== previousSpeed) {
+                        availableSpeeds.push(speed);
+                    }
+                }
+
+                // Select a random speed from available speeds
+                const randomIndex = Math.floor(Math.random() * availableSpeeds.length);
+                const selectedSpeed = availableSpeeds[randomIndex];
+                speedsArray.push(selectedSpeed);
+                previousSpeed = selectedSpeed;
+            }
+
+            return speedsArray;
+        }
+
+        /**
+         * Initializes the drops, speeds, and frameCounters arrays with random starting positions and frame counters.
+         */
+        function initializeDropsSpeedsAndCounters() {
+            drops = [];
+            speeds = [];
+            frameCounters = [];
+
+            // Define speed range (1 is fastest, higher numbers are slower)
+            const minSpeed = 1;
+            const maxSpeed = 3;
+
+            // Generate speeds ensuring no two adjacent columns have the same speed
+            speeds = generateSpeeds(columns, minSpeed, maxSpeed);
+
+            for (let i = 0; i < columns; i++) {
+                // Initialize drop position to a random value between 0 and height/fontSize
+                const initialDrop = Math.floor(Math.random() * (height / fontSize));
+                drops.push(initialDrop);
+
+                // Initialize frame counter to a random value between 0 and speed to stagger updates
+                const initialFrameCounter = Math.floor(Math.random() * speeds[i]);
+                frameCounters.push(initialFrameCounter);
+            }
+        }
+
+        // Initialize drops, speeds, and frame counters
+        initializeDropsSpeedsAndCounters();
+
+        /**
+         * Draws the Matrix effect on the canvas.
+         */
+        function drawMatrix() {
+            // Semi-transparent black background to create the fading effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Green text for the Matrix effect
+            ctx.fillStyle = '#00FF00';
+            ctx.font = fontSize + 'px monospace';
+
+            // Loop through each column
+            for (let i = 0; i < columns; i++) {
+                // Increment frame counter
+                frameCounters[i]++;
+
+                // Check if it's time to update the drop based on its speed
+                if (frameCounters[i] >= speeds[i]) {
+                    // Select a random character
+                    const text = letters.charAt(Math.floor(Math.random() * letters.length));
+
+                    // x coordinate of the column, y coordinate of the drop
+                    const x = i * baseFontSize;
+                    const y = drops[i] * baseFontSize;
+
+                    ctx.fillText(text, x, y);
+
+                    // Reset drop to top randomly after it has crossed the screen
+                    if (y > height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+
+                    // Increment y coordinate for the drop
+                    drops[i]++;
+
+                    // Reset frame counter
+                    frameCounters[i] = 0;
+                }
+            }
+        }
+
+        // Set interval to update the canvas every 50 milliseconds
+        const interval = setInterval(drawMatrix, 50);
+
+        /**
+         * Handles window resize events by adjusting the canvas size and recalculating columns, speeds, drops, and frame counters.
+         */
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+
+            // Recalculate number of columns based on new width
+            columns = Math.floor(width / baseFontSize);
+
+            // Reinitialize drops, speeds, and frame counters with the new number of columns
+            initializeDropsSpeedsAndCounters();
+        });
+    </script>
+</body>
+</html>

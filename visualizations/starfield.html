@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hipotononano - Starfield</title>
+    <link href="/assets/styles.css" rel="stylesheet">
+    <style>
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+        }
+
+        #center-text {
+            color: white;
+            border-color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Responsive font size */
+        @media (min-width: 768px) {
+            #centerText {
+                font-size: 3em;
+                padding: 30px;
+            }
+        }
+
+        /* Apply a pixelated background effect */
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+</head>
+<body>
+    <div id="center-text">Hipotononano</div>
+
+    <canvas id="starfield"></canvas>
+
+    <script>
+        // Get the canvas and its context
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size to match the window size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // Initialize canvas size
+        resizeCanvas();
+
+        // Update canvas size on window resize
+        window.addEventListener('resize', resizeCanvas);
+
+        // Star class representing each star in the field
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            // Initialize or reset star properties
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.z = Math.random() * canvas.width;
+                this.speed = 0.003; // Reduced speed for slower movement
+            }
+
+            // Update star position
+            update() {
+                this.z -= this.speed * canvas.width;
+                if (this.z <= 0) {
+                    this.reset();
+                    this.z = canvas.width;
+                }
+            }
+
+            // Draw the star on the canvas
+            draw() {
+                const x = (this.x - canvas.width / 2) * (canvas.width / this.z) + canvas.width / 2;
+                const y = (this.y - canvas.height / 2) * (canvas.width / this.z) + canvas.height / 2;
+
+                if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
+                    this.reset();
+                    return;
+                }
+
+                const size = Math.max(1, Math.floor((1 - this.z / canvas.width) * 2)); // Fixed pixel size
+                let brightness = Math.floor((1 - this.z / canvas.width) * 500); // Increased brightness
+                brightness = Math.min(255, brightness); // Cap brightness at 255
+                ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+                ctx.fillRect(x, y, size, size); // Draw square pixels for stars
+            }
+        }
+
+        // Create an array of stars
+        const stars = [];
+        const numStars = 300; // Number of stars
+
+        for (let i = 0; i < numStars; i++) {
+            stars.push(new Star());
+        }
+
+        // Animation loop to update and draw stars
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'; // Darker trail for retro effect
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw stars
+            for (let star of stars) {
+                star.update();
+                star.draw();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
